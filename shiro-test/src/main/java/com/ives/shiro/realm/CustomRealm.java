@@ -1,0 +1,78 @@
+package com.ives.shiro.realm;
+
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.AuthenticationInfo;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.SimpleAuthenticationInfo;
+import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
+import org.apache.shiro.realm.AuthorizingRealm;
+import org.apache.shiro.subject.PrincipalCollection;
+
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+
+public class CustomRealm extends AuthorizingRealm {
+   Map<String, String> userMap = new HashMap();
+
+   {
+      userMap.put("ives", "123456");
+      super.setName("customRealm");
+   }
+
+   // 授权
+   protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
+      String userName = (String) principalCollection.getPrimaryPrincipal();
+      Set<String> roles = getRolesByUserName(userName);
+      Set<String> permissions = getPermissionByUserName(userName);
+
+      SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
+      info.setRoles(roles);
+      info.setStringPermissions(permissions);
+
+      return info;
+   }
+
+   private Set<String> getPermissionByUserName(String userName) {
+      Set<String> sets = new LinkedHashSet();
+      sets.add("user:delete");
+      sets.add("user:create");
+
+      return sets;
+   }
+
+   // 从数据库中或者缓存中获取数据
+   private Set<String> getRolesByUserName(String userName) {
+      Set<String> sets = new LinkedHashSet();
+      sets.add("admin");
+      sets.add("user");
+
+      return sets;
+   }
+
+   // 认证 参数为主体传递进来的认证信息
+   protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws
+      AuthenticationException {
+      // 1、从主体传递过来的认证信息获取用户名
+      String userName = (String) authenticationToken.getPrincipal();
+
+      // 2、通过用户名从数据库中获取凭证
+
+      String password = getPasswordByUserName(userName);
+
+      if(password == null) {
+         return null;
+      }
+
+      SimpleAuthenticationInfo realm = new SimpleAuthenticationInfo(userName, password, "customRealm");
+
+      return realm;
+   }
+
+   // 模拟数据库
+   private String getPasswordByUserName(String userName) {
+      return userMap.get(userName);
+   }
+}
