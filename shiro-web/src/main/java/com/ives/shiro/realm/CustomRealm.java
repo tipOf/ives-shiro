@@ -1,5 +1,7 @@
 package com.ives.shiro.realm;
 
+import com.ives.dao.UserDao;
+import com.ives.domain.User;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -11,18 +13,22 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
 
-import java.util.HashMap;
+import javax.annotation.Resource;
 import java.util.LinkedHashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 public class CustomRealm extends AuthorizingRealm {
-   Map<String, String> userMap = new HashMap();
 
-   {
-      userMap.put("ives", "42736dc88b4d80c1f15a315b72d98583");
-      super.setName("customRealm");
-   }
+   @Resource
+   private UserDao userDao;
+
+//   Map<String, String> userMap = new HashMap();
+//
+//   {
+//      userMap.put("ives", "42736dc88b4d80c1f15a315b72d98583");
+//      super.setName("customRealm");
+//   }
 
    // 获取加密后的值
    public static void main(String[] args) {
@@ -53,9 +59,11 @@ public class CustomRealm extends AuthorizingRealm {
 
    // 从数据库中或者缓存中获取数据
    private Set<String> getRolesByUserName(String userName) {
-      Set<String> sets = new LinkedHashSet();
-      sets.add("admin");
-      sets.add("user");
+      System.out.println("从数据库中或者缓存中获取数据");
+      List<String> list = userDao.queryRolesByUserName(userName);
+      Set<String> sets = new LinkedHashSet(list);
+//      sets.add("admin");
+//      sets.add("user");
 
       return sets;
    }
@@ -77,13 +85,19 @@ public class CustomRealm extends AuthorizingRealm {
       SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(userName, password, "customRealm");
 
       // 加盐
-      authenticationInfo.setCredentialsSalt(ByteSource.Util.bytes("ives"));
+      authenticationInfo.setCredentialsSalt(ByteSource.Util.bytes(userName));
 
       return authenticationInfo;
    }
 
    // 模拟数据库
    private String getPasswordByUserName(String userName) {
-      return userMap.get(userName);
+      User user = userDao.getUserByUserName(userName);
+      if(user != null) {
+         return user.getPassword();
+      }
+
+      return null;
+//      return userMap.get(userName);
    }
 }

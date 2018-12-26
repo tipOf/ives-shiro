@@ -4,6 +4,8 @@ import com.ives.domain.User;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.subject.Subject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,12 +25,47 @@ public class LoginController {
          user.getPassword());
 
       try {
+         token.setRememberMe(user.isRememberMe());
          subject.login(token);
       }
       catch(AuthenticationException e) {
          return e.getMessage();
       }
 
-      return "登陆成功";
+      if(subject.hasRole("admin")) {
+         return "登陆成功是admin";
+      }
+
+      return "登陆成功不是admin";
+   }
+
+   // 注解的方式控制授权
+   @RequestMapping(value = "/testRole", method = RequestMethod.GET,
+      produces = "application/json;charset=utf-8")
+   @ResponseBody
+//   @RequiresRoles("admin")
+   public String testRole() {
+      return "testRole success";
+   }
+
+   @RequestMapping(value = "/testRole1", method = RequestMethod.GET,
+      produces = "application/json;charset=utf-8")
+   @ResponseBody
+//   @RequiresPermissions({"user:delete", "user:create"})
+   public String testRole1() {
+      return "testRole1 success";
+   }
+
+   // shiro过滤器测试
+   @RequestMapping(value = "/testPerms", method = RequestMethod.GET)
+   @ResponseBody
+   public String testPerms() {
+      return "testPerms success";
+   }
+
+   @RequestMapping(value = "/testPerms1", method = RequestMethod.GET)
+   @ResponseBody
+   public String testPerms1() {
+      return "testPerms1 success";
    }
 }

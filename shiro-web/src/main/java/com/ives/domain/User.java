@@ -3,6 +3,15 @@ package com.ives.domain;
 public class User {
    private String username;
    private String password;
+   private boolean rememberMe;
+
+   public boolean isRememberMe() {
+      return rememberMe;
+   }
+
+   public void setRememberMe(boolean rememberMe) {
+      this.rememberMe = rememberMe;
+   }
 
    public String getUsername() {
       return username;
